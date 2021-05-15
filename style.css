@@ -1,0 +1,31 @@
+body {
+  font: normal 16px/1.5em helvetica, aria, sans-serif;
+
+}
+#header, #footer {
+  text-align: center;
+  padding: 5px;
+  height: auto;
+  background-color: #777;
+  color: #fff;
+}
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+.column {
+  float: left;
+  border-style: solid;
+  border-width: 2px;
+  border-color: #777;
+  min-height: 400px;
+  padding: 15px;
+}
+.countries, .country_data {
+  width: 20%;
+}
+.main {
+  width: 50%;
+}
