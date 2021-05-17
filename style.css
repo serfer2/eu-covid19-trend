@@ -33,11 +33,11 @@ body {
 }
 .main {
     width: 58%;
-    padding-top: 100px;;
+    padding-top: 60px;;
 }
 .country_data {
     min-height: 200px;
-    padding: 30px 100px 30px, 100px;
+    padding: 30px 200px 30px 100px;
 }
 .line {
   fill: none;
@@ -56,13 +56,28 @@ div.tooltip {
   font: bold 10px/1.5em helvetica, aria, sans-serif;
 }
 div.tooltip table{
-    vertical-align: middle;
-    padding: 0px;
-    border-collapse: collapse;
+  vertical-align: middle;
+  padding: 0px;
+  border-collapse: collapse;
 }
 td.value {
-    text-align: right;
-    height: 10px;
-    font-weight: normal;
-    color: black;
+  text-align: right;
+  height: 10px;
+  font-weight: normal;
+  color: black;
+}
+div.country_data table td {
+  text-align: right;
+}
+div.country_data table td, div.country_data table th {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.floating {
+  float: left;
+  padding: 15px 30px 15px 0px;
+}
+h2 {text-align: center;}
+h2, h3 {
+    color: navy;
 }
