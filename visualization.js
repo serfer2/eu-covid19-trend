@@ -1,3 +1,6 @@
+const default_country_code = 'ESP';
+let countries_data = null;
+
 async function loadData(url = '') {
     /**
      * Loads data from a given url in JSON format and returns it as an
@@ -56,6 +59,29 @@ function tooltipHtml(d) {
 
     return html;
 }
+function showCountryHtml(d) {
+    let html = `<h2>${d.name}</h2>`;
+    html += '<div class="row">';
+    html += `<div class="floating"><b>Country:</b> <a href="${d.link}" target=_blank>${d.name} (${d.country_code}).</a></div><div class="floating"><b>Population:</b> ${d.population.toLocaleString()}</div>`;
+    html += '</div>';
+    html += '<div class="row">';
+    html += '<div class="floating"><h3>Cases</h3></div>';
+    html += '<div class="floating"><table>';
+    html += '<tr><th>Total</th><th>Total vs population</th><th>Last 30d</th><th>Last 7d</th></tr>';
+    html += `<tr><td>${d.total_cases.toLocaleString()}</td><td>${d.total_pcnt_cases.toLocaleString()} %</td><td>${d.last_month_cases.toLocaleString()}</td><td>${d.last_week_cases.toLocaleString()}</td></tr>`;
+    html += '</table></div>';
+    html += '</div>';
+    html += '<div class="row">';
+    html += '<div class="floating"><h3>Deaths</h3></div>';
+    html += '<div class="floating"><table>';
+    html += '<tr><th>Total</th><th>Total vs population</th><th>Last 30d</th><th>Last 7d</th></tr>';
+    html += `<tr><td>${d.total_deaths.toLocaleString()}</td><td>${d.total_pcnt_deaths.toLocaleString()} %</td><td>${d.last_month_deaths.toLocaleString()}</td><td>${d.last_week_deaths.toLocaleString()}</td></tr>`;
+    html += '</table></div>';
+    html += '</div>';
+
+    d3.select("#country_data").html(html);
+    console.log('country_data HTML: ' + html);
+}
 
 function showGraph(data, yAttr) {
     // Margin setup
@@ -67,8 +93,6 @@ function showGraph(data, yAttr) {
 	    .append("div")
 	    .attr("class", "tooltip")
 	    .style("opacity", 0);
-
-    console.log('With: ' + width + ' Height: ' + height);
 
     // Basic SVG canvas
     var svg = d3.select("#graph").append("svg")
@@ -145,16 +169,61 @@ function showGraph(data, yAttr) {
 
 }
 
-function getCountryData(data, countryCode) {
+function getCountryRegistries(countryCode) {
     /**
      * Since Country data appears to be in reverse order and has
      * a registry with accumulated summary, we should remove that
      * registry and reverse registries (from older to newer).
      */
-    let countryRegistries = data.filter(d => d.countryterritoryCode == countryCode);
+    let countryRegistries = countries_data.filter(d => d.countryterritoryCode == countryCode);
     countryRegistries.pop();  // remove summary registry
 
     return countryRegistries.reverse();
+}
+
+function getCountrySummary(countryCode) {
+    /**
+     * Since Country data appears to be in reverse order and has
+     * a registry with accumulated summary, we should remove that
+     * registry and reverse registries (from older to newer).
+     */
+    let countryRegistries = countries_data
+        .filter(d => d.countryterritoryCode == countryCode)
+        .reverse();
+    const first_registry = countryRegistries.shift();  // first registry is a summary
+    let country_summary = {
+        name: first_registry.countriesAndTerritories,
+        country_code: first_registry.countryterritoryCode,
+        total_cases: first_registry.cases,
+        total_deaths: first_registry.deaths,
+        population: parseInt(first_registry.popData2020),
+        last_week_cases: 0,
+        last_month_cases: 0,
+        last_week_deaths: 0,
+        last_month_deaths: 0,
+        total_pcnt_cases: 0,
+        total_pcnt_deaths: 0,
+        link: '',
+    };
+    var pos = countryRegistries.length - 1;
+    for (var i = 0; i < 7; i++) {
+        country_summary.last_week_deaths += countryRegistries[pos - i].deaths;
+        country_summary.last_week_cases += countryRegistries[pos - i].cases;
+    }
+    pos = countryRegistries.length - 1;
+    for (var i = 0; i < 30; i++) {
+        country_summary.last_month_deaths += countryRegistries[pos - i].deaths;
+        country_summary.last_month_cases += countryRegistries[pos - i].cases;
+    }
+    for (var i = 0; i < countryRegistries.length; i++) {
+        country_summary.total_deaths += countryRegistries[i].deaths;
+        country_summary.total_cases += countryRegistries[i].cases;
+    }
+    country_summary.total_pcnt_deaths = roundTo(country_summary.total_deaths * 100 / country_summary.population, 2);
+    country_summary.total_pcnt_cases = roundTo(country_summary.total_cases * 100 / country_summary.population, 2);
+    country_summary.link = `https://en.wikipedia.org/wiki/${country_summary.name}`;
+
+    return country_summary;
 }
 
 /**
@@ -164,7 +233,8 @@ function getCountryData(data, countryCode) {
  *  - Show D3 SVG graphics
  */
 document.addEventListener("DOMContentLoaded", async function(event) {
-  const data = (await loadData()).map(preprocessData);
-  console.log(data[0]);
-  showGraph(getCountryData(data, 'AUT'), 'cases');
+    countries_data = (await loadData()).map(preprocessData);
+    console.log(countries_data[0]);
+    showGraph(getCountryRegistries(default_country_code), 'cases');
+    showCountryHtml(getCountrySummary(default_country_code));
 });
