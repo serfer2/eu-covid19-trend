@@ -1,4 +1,4 @@
-const default_country_code = 'ESP';
+let country_code = 'ESP';
 let countries_data = null;
 
 async function loadData(url = '') {
@@ -80,7 +80,6 @@ function showCountryHtml(d) {
     html += '</div>';
 
     d3.select("#country_data").html(html);
-    console.log('country_data HTML: ' + html);
 }
 
 function showGraph(data, yAttr) {
@@ -89,10 +88,14 @@ function showGraph(data, yAttr) {
     var width = 900 - margin.left - margin.right;
     var height = 300 - margin.top - margin.bottom;
 
+    d3.select("#graph_tooltip").remove();
+
     var div = d3.select("body")
 	    .append("div")
-	    .attr("class", "tooltip")
-	    .style("opacity", 0);
+	    .attr("id", "graph_tooltip")
+        .attr("class", "tooltip")
+	    .style("opacity", 0)
+        .style("display", "none");
 
     // Basic SVG canvas
     var svg = d3.select("#graph").append("svg")
@@ -112,7 +115,7 @@ function showGraph(data, yAttr) {
         .y(function(d) { return y(d[yAttr]); });
 
     // g is a group of vectorial graphics
-    var g = svg.append("g").attr("transform", "translate(10, 0)");
+    var g = svg.append("g").attr("transform", "translate(0, 0)");
 
     x.domain(d3.extent(data, function(d) { return d.date; }));
     y.domain([0, d3.max(data, function(d) { return d[yAttr]; })]);
@@ -131,7 +134,8 @@ function showGraph(data, yAttr) {
         div.html(tooltipHtml(d))
         .style("left", (event.pageX + 20) + "px")
         .style("top", (event.pageY - 20) + "px")
-        .style("opacity", .9);
+        .style("opacity", .9)
+        .style("display", "block");
 
         d3.select(this).transition().duration(200).style("fill", "#d30715");
 
@@ -150,7 +154,10 @@ function showGraph(data, yAttr) {
     .on("mouseout", function(d) {
         d3.select(this).transition().duration(500).style("fill", "#fcb0b5");
         g.selectAll("#tooltip_path").remove();
-        div.style("opacity", 0).style("left", "0px").style("right", "0px")
+        div.style("opacity", 0)
+        .style("left", "0px")
+        .style("right", "0px")
+        .style("display", "none")
     });
 
     g.selectAll("path").data([data]).enter().append("path")
@@ -226,15 +233,72 @@ function getCountrySummary(countryCode) {
     return country_summary;
 }
 
+function getCountries() {
+    /**
+     * Returns an array of 'name' and 'code' for all unique
+     * countries that appears in countries_data.
+     */
+    var countries = [];
+    let seen_countries = {}
+    for (var item, i = 0; item = countries_data[i++];) {
+        if (!(item.countriesAndTerritories in seen_countries)) {
+            seen_countries[item.countriesAndTerritories] = item.countryterritoryCode;
+            countries.push({
+                'name': item.countriesAndTerritories,
+                'code': item.countryterritoryCode,
+            });
+        }
+    }
+    return countries;
+}
+
+function showSelector() {
+    /**
+     * Draows a selector with options for selecting any country
+     * present in countries_data.
+     * When selection changes, it shows that country data.
+     */
+    const countries = getCountries();
+
+    var select = d3.select('#countries')
+    .append('select')
+    .attr('class','select')
+    .on('change', select_country);
+
+    select
+    .selectAll('option')
+    .data(countries).enter()
+    .append('option')
+    .text(function (d) { return d.name; })
+    .attr('value', function (d) { return d.code })
+    .attr('id', function (d) { return `opt_${d.code}` });
+
+    d3.select(`#opt_${country_code}`)
+    .property('selected', true);
+
+}
+
+function select_country() {
+    /**
+     * Refresh screen shown data according to selected country.
+     */
+    country_code = d3.select('select').property('value');
+    d3.select('#graph').html('');
+    d3.select('#country_data').html('');
+    showGraph(getCountryRegistries(country_code), 'cases');
+    showCountryHtml(getCountrySummary(country_code));
+};
+
 /**
  * On document ready ...
  *  - Load data
  *  - Filter by country
  *  - Show D3 SVG graphics
+ *  - Show country selector
  */
 document.addEventListener("DOMContentLoaded", async function(event) {
     countries_data = (await loadData()).map(preprocessData);
-    console.log(countries_data[0]);
-    showGraph(getCountryRegistries(default_country_code), 'cases');
-    showCountryHtml(getCountrySummary(default_country_code));
+    showGraph(getCountryRegistries(country_code), 'cases');
+    showCountryHtml(getCountrySummary(country_code));
+    showSelector();
 });
