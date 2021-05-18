@@ -13,3 +13,4 @@ The ECDC is an agency of the European Union. [Data used for this visualization](
 ## Scope
 
 This small D3 Js application is part of *A8: Creación de una visualización interactiva (PEC3)*. From *Visualización de datos* course from [Data Science Master degree](https://estudios.uoc.edu/es/masters-universitarios/data-science/presentacion) at [UOC](https://www.uoc.edu/portal/en/index.html).
+
