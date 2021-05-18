@@ -8,8 +8,8 @@ body {
   height: auto;
   background-color: rgb(0, 100, 167);
   color: #fff;
-  margin-left: 10%;
-  margin-right: 10%;
+  margin-left: 20%;
+  margin-right: 20%;
 }
 #header a, #footer a{
     color: rgb(172, 222, 255);
@@ -26,18 +26,21 @@ body {
   padding: 15px;
 }
 .fill {
-    width: 8%;
-}
-.countries {
-  width: 18%;
+    width: 20%;
 }
 .main {
-    width: 58%;
-    padding-top: 60px;;
+    width: 50%;
+    padding-top: 40px;
+}
+#graph {
+    padding-top: 30px;
+}
+#countries {
+    padding-left: 112px;
 }
 .country_data {
     min-height: 200px;
-    padding: 30px 200px 30px 100px;
+    padding: 30px 200px 0px 100px;
 }
 .line {
   fill: none;
